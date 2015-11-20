@@ -41,7 +41,6 @@ def buildDroid(builder):
 
     # configure 
     print('configure...')
-    print(configure)
     builder.execCmd(configure, env=env)
 
     # make
@@ -99,7 +98,6 @@ def buildIos(builder):
     env = {}
 
     # configure
-    print(configure)
     print('configure...') 
     builder.execCmd(configure, env=env)
 

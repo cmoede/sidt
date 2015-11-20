@@ -29,8 +29,6 @@ def buildDroid(builder):
             'RANLIB': builder.getDroidToolchainTool('ranlib'), 
             'PATH':os.path.join(toolchainDir, 'bin') + ':' + os.environ['PATH']
             }
-    print(env)
-  
  
     # configure
     print('configure...') 

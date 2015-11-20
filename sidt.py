@@ -29,8 +29,9 @@ class builder:
     CurDroidABI = ''
    
     # options
-    ForceDownload = False 
-
+    OptForceDownload = False 
+    OptDroidInstallDir = ''
+    OptIOSInstallDir = ''
 
     def __init__(self):
         configMod = importlib.import_module('config')
@@ -84,7 +85,6 @@ class builder:
             os.mkdir(dir)
     
     def copyTree(self, src, dst):
-        print('copyTree %s %s', src, dst)
         names = os.listdir(src)
          
         self.mkDir(dst)
@@ -92,24 +92,11 @@ class builder:
         for name in names:
             srcname = os.path.join(src, name)
             dstname = os.path.join(dst, name)
-            try:
-                if os.path.isdir(srcname):
-                    self.copyTree(srcname, dstname)
-                else:
-                    self.rmFile(dstname)
-                    shutil.copy2(srcname, dstname)
-                    
-            except (IOError, os.error) as why:
-                errors.append((srcname, dstname, str(why)))
-            except shutil.Error as err:
-                print(err)
-                errors.extend(err.args[0])
-        try:
-            shutil.copystat(src, dst)
-        except OSError as why:
-            errors.extend((src, dst, str(why)))
-        if errors:
-            raise shutil.Error(errors)
+            if os.path.isdir(srcname):
+                self.copyTree(srcname, dstname)
+            else:
+                self.rmFile(dstname)
+                shutil.copy2(srcname, dstname)
 
     def droidMakeToolchain(self, abi):
         print('setting up toolchain for %s...' % abi)    
@@ -135,7 +122,6 @@ class builder:
         else:
             print('unknown abi %s' % abi)
         cmd.append('--arch=%s' % arch)
-        print(cmd) 
         self.execCmd(cmd, shell=True)
 
     def getXcodeDeveloperPath(self):
@@ -234,7 +220,7 @@ class builder:
 
     def downloadPackage(self):
         os.chdir(self.PackageDir)
-        if os.path.isfile(self.getPackageFileName()) and not self.ForceDownload:
+        if os.path.isfile(self.getPackageFileName()) and not self.OptForceDownload:
             print('using downloaded package')
             return
         
@@ -314,7 +300,10 @@ class builder:
             for libs in allLibs:
                 merge.append(libs[i])
             self.mergeLibs(merge, os.path.join(self.InstallDir, 'ios', 'lib', os.path.basename(merge[0])))  
-
+        
+        if self.OptIOSInstallDir != '':
+            self.copyTree(os.path.join(self.InstallDir, 'ios'), self.OptIOSInstallDir) 
+ 
     def buildDroid(self, name, mod):
 
         self.checkDroidSetup()
@@ -340,7 +329,11 @@ class builder:
  
         funcCopy = getattr(mod, 'copyIncludeFiles')
         funcCopy(self, os.path.join(self.InstallDir, 'droid', 'include'))
-         
+        
+        os.chdir(self.SavedCWD)
+        if self.OptDroidInstallDir != '':
+            self.copyTree(os.path.join(self.InstallDir, 'droid'), self.OptDroidInstallDir) 
+
     def build(self, name):
         self.PackageURL = ''
         try:
@@ -358,23 +351,42 @@ class builder:
         # download the package
         self.downloadPackage() 
        
-     
         if 'ios' in self.Targets:
             self.buildIos(name, mod)
         if 'droid' in self.Targets:
             self.buildDroid(name, mod)
+    
+    def parseArgValue(self, args, i):
+        arg = args[i]
+        if arg.find('=') != -1:
+            return [arg.split('=')[1], 0]
+        if i + 1 >= len(args):
+            self.printErrorAndExit('missing argument')
+        return [args[i+1], 1]
 
+    
     def parseOptions(self):
         i = 1 
         while i < len(sys.argv):
             arg = sys.argv[i]
             if arg == '--force-download' or arg == '-d':
-                self.ForceDownload = True
-            elif arg == '-t' or arg == '--target':
-                i = i + 1
-                if i == len(sys.argv):
-                    self.printErrorAndExit('missing argument')
-                self.Targets.append(sys.argv[i])
+                self.OptForceDownload = True
+            elif arg == '-t' or arg.find('-t=') == 0 or arg == '--target' or arg.find('--target=') == 0:
+                res = self.parseArgValue(sys.argv, i)
+                self.Targets.append(res[0])
+                i = i + res[1] 
+            elif arg == '--droidinstall' or arg.find('--droidinstall=') == 0:
+                res = self.parseArgValue(sys.argv, i)  
+                self.OptDroidInstallDir = res[0]
+                if not os.path.isdir(self.OptDroidInstallDir):
+                    self.printErrorAndExit('%s is not a directory' % self.OptDroidInstallDir)
+                i = i + res[1]              
+            elif arg == '--iosinstall' or arg.find('--iosinstall=') == 0:
+                res = self.parseArgValue(sys.argv, i)  
+                self.OptIOSInstallDir = res[0]
+                if not os.path.isdir(self.OptIOSInstallDir):
+                    self.printErrorAndExit('%s is not a directory' % self.OptIOSInstallDir)
+                i = i + res[1]              
             else:
                 if arg.find('-') == 0:
                     self.printErrorAndExit('error: unhandled option %s' % arg)
