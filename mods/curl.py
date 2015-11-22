@@ -123,7 +123,7 @@ def copyIncludeFiles(builder, dest):
                 if '#define CURL_SIZEOF_LONG' in line:
                     line = '#define CURL_SIZEOF_LONG sizeof(long)\n'
                 if '#define CURL_SIZEOF_CURL_OFF_T' in line:
-                    line = '#define CURL_SIZEOF_CURL_OFF_T sizeof(long)\n' 
+                    line = '#define CURL_SIZEOF_CURL_OFF_T sizeof(curl_off_t)\n'
                 fout.write(line)
     os.remove(path)
     os.rename(path + '.new', path)
