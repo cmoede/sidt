@@ -32,6 +32,7 @@ class builder:
     OptForceDownload = False 
     OptDroidInstallDir = ''
     OptIOSInstallDir = ''
+    OptNdkDir = ''
 
     def __init__(self):
         configMod = importlib.import_module('config')
@@ -154,6 +155,8 @@ class builder:
         return os.path.join(self.getIosCrossTop(), 'SDKs', self.getIosCrossSDK())
 
     def getDroidNdkDir(self):
+        if self.OptNdkDir != '':
+            return self.OptNdkDir
         return self.Settings['droid']['ndk']
 
     def getDroidPlatformDir(self):
@@ -375,6 +378,10 @@ class builder:
                 res = self.parseArgValue(sys.argv, i)
                 self.Targets.append(res[0])
                 i = i + res[1] 
+            elif arg == '--ndk' or arg.find('--ndk') == 0:
+                res = self.parseArgValue(sys.argv, i)
+                self.OptNdkDir = res[0]
+                i = i + res[1]
             elif arg == '--droidinstall' or arg.find('--droidinstall=') == 0:
                 res = self.parseArgValue(sys.argv, i)  
                 self.OptDroidInstallDir = res[0]
