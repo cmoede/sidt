@@ -2,7 +2,7 @@ import sidt
 import os
 import shutil
 
-Version = '1.0.2d'
+Version = '1.0.2e'
 
 def start(builder):
 
