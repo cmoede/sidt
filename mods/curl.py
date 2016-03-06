@@ -19,7 +19,10 @@ def buildDroid(builder):
     os.chdir(dir)
 
     configure = ['./Configure']
-    configure.append('--host=arm-linux-androideabi')
+    if arch == 'x86':
+        configure.append('--host=x86-linux-android')
+    else:
+        configure.append('--host=arm-linux-androideabi')
     configure.append('--disable-ldap')
     configure.append('--disable-ftp')
     configure.append('--disable-manual')
@@ -30,9 +33,16 @@ def buildDroid(builder):
     configure.append('--prefix')
     configure.append(installDir) 
 
-        
 
-    env = { 'PATH':os.path.join(builder.getDroidToolchainDir(), 'bin') + ':' + os.environ['PATH'] }
+    #env = { 'PATH':os.path.join(builder.getDroidToolchainDir(), 'bin') + ':' + os.environ['PATH'] }
+
+    toolchainDir = builder.getDroidToolchainDir()
+    env = { 'CC': builder.getDroidToolchainTool('gcc'),  
+            'AR': builder.getDroidToolchainTool('ar'), 
+            'RANLIB': builder.getDroidToolchainTool('ranlib'), 
+            'PATH':os.path.join(toolchainDir, 'bin') + ':' + os.environ['PATH']
+            }
+
     #env['NM'] = builder.getDroidToolchainTool('nm')
     if WithSSL:
         env['CFLAGS'] = '-I%s' % os.path.join(builder.getInstallDir(), 'droid', 'include')

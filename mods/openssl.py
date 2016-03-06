@@ -2,7 +2,7 @@ import sidt
 import os
 import shutil
 
-Version = '1.0.2e'
+Version = '1.0.2g'
 
 def start(builder):
 
@@ -20,7 +20,7 @@ def buildDroid(builder):
     os.chdir(dir)
 
     configure = ['./Configure']
-    configure.append('android-armv7')   
+    configure.append('android-' + arch)   
     configure.append('--openssldir=' + installDir)
     
     toolchainDir = builder.getDroidToolchainDir()
