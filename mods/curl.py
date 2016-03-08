@@ -18,7 +18,7 @@ def buildDroid(builder):
     dir = os.path.join(buildDir, 'curl-%s' % Version)
     os.chdir(dir)
 
-    configure = ['./Configure']
+    configure = ['./configure']
     if arch == 'x86':
         configure.append('--host=x86-linux-android')
     else:
