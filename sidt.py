@@ -232,7 +232,7 @@ class builder:
         
         print('downloading %s' % self.PackageURL)
         self.rmFile(self.getPackageFileName())
-        self.execCmd(['curl', '-o', 'package.download', self.PackageURL])
+        self.execCmd(['curl', '-oL', 'package.download', self.PackageURL])
         os.rename('package.download', self.getPackageFileName())  
         os.chdir(self.SavedCWD)
 
