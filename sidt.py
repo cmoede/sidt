@@ -215,6 +215,7 @@ class builder:
             print('subprocess.call failed with code %d' % ret)
             print('args: %s' % args)
             sys.exit(1)
+        return ret
 
     def mergeLibs(self, libs, out):
         args = ['lipo', '-create']
@@ -232,7 +233,7 @@ class builder:
         
         print('downloading %s' % self.PackageURL)
         self.rmFile(self.getPackageFileName())
-        self.execCmd(['curl', '-oL', 'package.download', self.PackageURL])
+        self.execCmd(['curl', '-Lo', 'package.download', self.PackageURL])
         os.rename('package.download', self.getPackageFileName())  
         os.chdir(self.SavedCWD)
 
@@ -248,7 +249,12 @@ class builder:
         print('extracting...')
         packageName = self.PackageURL.rsplit('/', 1)[1]
         os.chdir(self.BuildDir)
-        self.execCmd(['tar', 'zxf', os.path.join(self.PackageDir, packageName)])
+        path = os.path.join(self.PackageDir, packageName)
+        ret = self.execCmd(['tar', 'zxf', path], ignoreError = True)
+        if ret != 0:
+            print('failed to unpack %s - removing tar file' % path)
+            os.remove(path)
+            sys.exit(1)
         os.chdir(self.SavedCWD)
 
     def cleanupBuildDir(self):
