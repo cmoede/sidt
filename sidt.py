@@ -166,7 +166,10 @@ class builder:
         return self.DroidToolchainDir 
     
     def getDroidToolchainTool(self, tool):
-        return os.path.join(self.getDroidToolchainDir(), 'bin', 'arm-linux-androideabi-%s' % tool)
+        if self.CurArchitecture == 'x86':
+            return os.path.join(self.getDroidToolchainDir(), 'bin', 'i686-linux-android-%s' % tool)
+        else:
+            return os.path.join(self.getDroidToolchainDir(), 'bin', 'arm-linux-androideabi-%s' % tool)
 
     def getDroidSysRoot(self):
         return os.path.join(self.getDroidToolchainDir(), 'sysroot') 
@@ -212,6 +215,7 @@ class builder:
             print('subprocess.call failed with code %d' % ret)
             print('args: %s' % args)
             sys.exit(1)
+        return ret
 
     def mergeLibs(self, libs, out):
         args = ['lipo', '-create']
@@ -229,7 +233,7 @@ class builder:
         
         print('downloading %s' % self.PackageURL)
         self.rmFile(self.getPackageFileName())
-        self.execCmd(['curl', '-o', 'package.download', self.PackageURL])
+        self.execCmd(['curl', '-Lo', 'package.download', self.PackageURL])
         os.rename('package.download', self.getPackageFileName())  
         os.chdir(self.SavedCWD)
 
@@ -245,7 +249,12 @@ class builder:
         print('extracting...')
         packageName = self.PackageURL.rsplit('/', 1)[1]
         os.chdir(self.BuildDir)
-        self.execCmd(['tar', 'zxf', os.path.join(self.PackageDir, packageName)])
+        path = os.path.join(self.PackageDir, packageName)
+        ret = self.execCmd(['tar', 'zxf', path], ignoreError = True)
+        if ret != 0:
+            print('failed to unpack %s - removing tar file' % path)
+            os.remove(path)
+            sys.exit(1)
         os.chdir(self.SavedCWD)
 
     def cleanupBuildDir(self):
@@ -314,26 +323,33 @@ class builder:
         # create output directory structure
         self.mkDir(os.path.join(self.InstallDir, 'droid'))
         self.mkDir(os.path.join(self.InstallDir, 'droid', 'include'))
+       
+        # build variants
+        variants = [ ['x86', 'x86'], ['armeabi-v7a', 'armv7'] ]
         
-        print('-----------------------------------------')
-        print('building %s for droid' % (name))    
-        self.unpackPackage()
-        self.CurDroidABI = 'armeabi-v7a'
-        self.CurPlatform = 'droid'
-        self.CurArchitecture = 'armv7'
-        self.droidMakeToolchain(self.CurDroidABI)
-        funcBuild = getattr(mod, 'buildDroid')
-        libs = funcBuild(self) 
+        for i in range(0, len(variants)):
+            v = variants[i]
+            print('-----------------------------------------')
+            print('building %s for droid' % (name))    
+            self.unpackPackage()
+            self.CurDroidABI = v[0]
+            self.CurPlatform = 'droid'
+            self.CurArchitecture = v[1]
+            self.droidMakeToolchain(self.CurDroidABI)
+            funcBuild = getattr(mod, 'buildDroid')
+            libs = funcBuild(self) 
         
-        abidir = os.path.join(self.InstallDir, 'droid', self.CurDroidABI)
-        self.mkDir(abidir)
-        for l in libs:
-            shutil.copy(l, abidir)       
+            abidir = os.path.join(self.InstallDir, 'droid', self.CurDroidABI)
+            self.mkDir(abidir)
+            for l in libs:
+                shutil.copy(l, abidir)       
  
-        funcCopy = getattr(mod, 'copyIncludeFiles')
-        funcCopy(self, os.path.join(self.InstallDir, 'droid', 'include'))
+            funcCopy = getattr(mod, 'copyIncludeFiles')
+            funcCopy(self, os.path.join(self.InstallDir, 'droid', 'include'))
         
-        os.chdir(self.SavedCWD)
+            os.chdir(self.SavedCWD)
+            self.cleanupBuildDir()
+
         if self.OptDroidInstallDir != '':
             self.copyTree(os.path.join(self.InstallDir, 'droid'), self.OptDroidInstallDir) 
 

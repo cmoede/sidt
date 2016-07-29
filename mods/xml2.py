@@ -9,7 +9,7 @@ APP_STL := gnustl_static
 APP_CPPFLAGS += -frtti
 APP_CPPFLAGS += -fexceptions
 APP_CPPFLAGS += -DANDROID
-APP_ABI := armeabi
+APP_ABI := @ABI@
 NDK_TOOLCHAIN_VERSION := clang'''
 
 AndroidMK='''\
@@ -35,6 +35,7 @@ def buildDroid(builder):
     platform = builder.getCurPlatform()
     arch = builder.getCurArchitecture()
     installDir = os.path.join(tmpDir, '%s_%s' % (platform, arch))
+    droidABI = builder.getDroidABI();
     
     buildDir = os.path.join(buildDir, 'libxml2-%s' % Version)
     os.chdir(buildDir)
@@ -47,7 +48,7 @@ def buildDroid(builder):
     dir = os.path.join(buildDir, 'jni')
     os.mkdir(dir)
     with open("jni/Application.mk", "w") as f:
-        f.write(AppMK.replace('@OUTDIR@', installDir))
+        f.write(AppMK.replace('@ABI@', droidABI))
 
     with open("jni/Android.mk", "w") as f:
         f.write(AndroidMK)    
@@ -79,7 +80,7 @@ def buildDroid(builder):
     cmd.append(os.path.join(builder.getDroidNdkDir(), 'ndk-build'))
     builder.execCmd(cmd)
    
-    return [os.path.join(buildDir, 'obj/local/armeabi/libxml2.a')]
+    return [os.path.join(buildDir, 'obj/local/%s/libxml2.a' % droidABI)]
        
  
 def buildIos(builder):

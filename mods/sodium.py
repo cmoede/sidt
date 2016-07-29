@@ -23,12 +23,18 @@ def buildDroid(builder):
     configure.append('--enable-minimal')    
     configure.append('--prefix=%s' % installDir)
     configure.append('--with-sysroot=%s' % builder.getDroidSysRoot())
-    configure.append('--host=%s' % 'arm-linux-androideabi')
+    if arch == 'x86':
+        configure.append('--host=%s' % 'x86-linux-android')
+    else:
+        configure.append('--host=%s' % 'arm-linux-androideabi')
 
-    env = {
-              'PATH':os.path.join(builder.getDroidToolchainDir(), 'bin') + ':' + os.environ['PATH']
+
+    toolchainDir = builder.getDroidToolchainDir()
+    env = { 'CC': builder.getDroidToolchainTool('gcc'),  
+            'AR': builder.getDroidToolchainTool('ar'), 
+            'RANLIB': builder.getDroidToolchainTool('ranlib'), 
+            'PATH':os.path.join(toolchainDir, 'bin') + ':' + os.environ['PATH']
             }
-
     # autogen   
     print('autogen...')
     builder.execCmd(['./autogen.sh'])
