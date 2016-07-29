@@ -32,6 +32,7 @@ class builder:
     OptForceDownload = False 
     OptDroidInstallDir = ''
     OptIOSInstallDir = ''
+    OptOSXInstallDir = ''
     OptNdkDir = ''
 
     def __init__(self):
@@ -273,6 +274,35 @@ class builder:
         if not self.checkNdkDir():
             self.printErrorAndExit('nkd dir not found')
 
+    def buildOsx(self, name, mod):
+        
+        # create output directory structure
+        self.mkDir(os.path.join(self.InstallDir, 'osx'))
+        self.mkDir(os.path.join(self.InstallDir, 'osx', 'include'))
+        self.mkDir(os.path.join(self.InstallDir, 'osx', 'lib'))
+
+        # build variants
+        print('-----------------------------------------')
+        print('building %s for osx/x86_64' % name)    
+        self.unpackPackage()
+        funcBuild = getattr(mod, 'buildDarwin')
+        self.CurPlatform = 'osx' 
+        self.CurArchitecture = 'x86_64'
+        libs = funcBuild(self)
+        for l in libs:
+            shutil.copy(l, os.path.join(self.InstallDir, 'osx', 'lib'))       
+        
+        # copy include files
+        funcCopy = getattr(mod, 'copyIncludeFiles')
+        funcCopy(self, os.path.join(self.InstallDir, 'osx', 'include'))
+
+        os.chdir(self.SavedCWD)
+        self.cleanupBuildDir()
+    
+        if self.OptOSXInstallDir != '':
+            self.copyTree(os.path.join(self.InstallDir, 'osx'), self.OptOSXInstallDir) 
+        
+    
     def buildIos(self, name, mod):
 
         # create output directory structure
@@ -289,7 +319,7 @@ class builder:
             print('-----------------------------------------')
             print('building %s for %s' % (name, v))    
             self.unpackPackage()
-            funcBuild = getattr(mod, 'buildIos')
+            funcBuild = getattr(mod, 'buildDarwin')
             self.CurPlatform = v.split('@')[0]
             self.CurArchitecture = v.split('@')[1]
             libs = funcBuild(self)
@@ -372,6 +402,8 @@ class builder:
        
         if 'ios' in self.Targets:
             self.buildIos(name, mod)
+        if 'osx' in self.Targets:
+            self.buildOsx(name, mod)
         if 'droid' in self.Targets:
             self.buildDroid(name, mod)
     
@@ -409,7 +441,13 @@ class builder:
                 self.OptIOSInstallDir = res[0]
                 if not os.path.isdir(self.OptIOSInstallDir):
                     self.printErrorAndExit('%s is not a directory' % self.OptIOSInstallDir)
-                i = i + res[1]              
+                i = i + res[1]         
+            elif arg == '--osxinstall' or arg.find('--osxinstall=') == 0:
+                res = self.parseArgValue(sys.argv, i)  
+                self.OptOSXInstallDir = res[0]
+                if not os.path.isdir(self.OptOSXInstallDir):
+                    self.printErrorAndExit('%s is not a directory' % self.OptOSXInstallDir)
+                i = i + res[1]         
             else:
                 if arg.find('-') == 0:
                     self.printErrorAndExit('error: unhandled option %s' % arg)
