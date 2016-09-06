@@ -1,7 +1,7 @@
 import sidt 
 import os
 
-Version = '2.7.2'
+Version = '2.9.4'
 AppMK = '''\
 APP_OPTIM := release
 APP_PLATFORM := android-17
@@ -19,7 +19,7 @@ LOCAL_MODULE    := libxml2
 XML2_SOURCES := \
     SAX.c SAX2.c entities.c encoding.c error.c parserInternals.c \
     parser.c tree.c hash.c list.c dict.c xmlIO.c xmlmemory.c \
-    uri.c globals.c xmlstring.c threads.c valid.c chvalid.c
+    uri.c globals.c xmlstring.c threads.c valid.c chvalid.c buf.c
 XML2_LOCAL_SRC_FILES := $(addprefix ../,$(XML2_SOURCES))
 LOCAL_SRC_FILES := $(XML2_LOCAL_SRC_FILES)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include
