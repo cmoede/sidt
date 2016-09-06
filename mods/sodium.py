@@ -1,7 +1,7 @@
 import sidt 
 import os
 
-Version = '1.0.6'
+Version = '1.0.11'
 
 def start(builder):
     url = 'https://download.libsodium.org/libsodium/releases/libsodium-%s.tar.gz' % Version
