@@ -7,7 +7,7 @@ import shutil
 import importlib
 
 class builder:
-    PackageURL = 'narf'
+    PackageURL = ''
     SavedCWD = os.getcwd()
     LogFile = ''
     PackageDir = ''
@@ -68,9 +68,15 @@ class builder:
             os.mkdir(self.InstallDir)
     
 
-    def printUsageAndExit():
+    def printUsageAndExit(self):
         print('Usage:')
-        print('build.py module')
+        print('build.py [options] modules')
+        print('Options:')
+        print('--target TARGET, -t TARGET: add build target (ios, droid)')
+        print('--force-download, -d: don\'t use already downloaded packages')
+        print('--ndk DIR: android NDK directory')
+        print('--droidinstall DIR: install directory for android libs/include files')
+        print('--iosinstall DIR: install directory for ios libs/include files')
         sys.exit(0) 
 
     def printErrorAndExit(self, err):
@@ -160,8 +166,8 @@ class builder:
             return self.OptNdkDir
         return self.Settings['droid']['ndk']
 
-    def getDroidPlatformDir(self):
-        return os.path.join(self.Settings['droid']['ndk'], 'platforms', self.Settings['droid']['platform'], 'arch-arm')
+    def getDroidSysRoot(self):
+        return os.path.join(self.Settings['droid']['ndk'], 'platforms', self.Settings['droid']['platform'], 'arch-' + self.CurArchitecture)
     
     def getDroidToolchainDir(self):
         return self.DroidToolchainDir 
@@ -311,7 +317,6 @@ class builder:
         self.mkDir(os.path.join(self.InstallDir, 'ios', 'lib'))
 
         # build variants
-        variants = [ ['iPhoneSimulator', 'x86_64'], ['iPhoneOS', 'armv7'], ['iPhoneOS', 'armv7s'], ['iPhoneOS', 'arm64']]
         variants = self.Settings['ios']['architectures']
         allLibs = []
         for i in range(0, len(variants)):
@@ -394,11 +399,9 @@ class builder:
 
         func = getattr(mod, 'start')
         func(self)
-        if self.PackageURL == '':
-            self.printErrorAndExit('setPackage not called')
-
-        # download the package
-        self.downloadPackage() 
+        if self.PackageURL != '':
+            # download the package
+            self.downloadPackage() 
        
         if 'ios' in self.Targets:
             self.buildIos(name, mod)
@@ -439,6 +442,7 @@ class builder:
             elif arg == '--iosinstall' or arg.find('--iosinstall=') == 0:
                 res = self.parseArgValue(sys.argv, i)  
                 self.OptIOSInstallDir = res[0]
+                print('xx %s' % res[0])
                 if not os.path.isdir(self.OptIOSInstallDir):
                     self.printErrorAndExit('%s is not a directory' % self.OptIOSInstallDir)
                 i = i + res[1]         
@@ -457,7 +461,7 @@ class builder:
         if not self.Targets:
             self.Targets = self.KnownTargets
         if len(self.LibsToBuild) == 0:
-            self.printErrorAndExit('no libraries given')
+            self.printUsageAndExit()
       
     def run(self):
         for l in self.LibsToBuild:

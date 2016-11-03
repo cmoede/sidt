@@ -83,14 +83,14 @@ def buildDroid(builder):
     return [os.path.join(buildDir, 'obj/local/%s/libxml2.a' % droidABI)]
        
  
-def buildIos(builder):
+def buildDarwin(builder):
     buildDir = builder.getBuildDir() 
     tmpDir = builder.getTmpDir()
     platform = builder.getCurPlatform()
     arch = builder.getCurArchitecture()
     installDir = os.path.join(tmpDir, '%s_%s' % (platform, arch))
     
-    dir = os.path.join(buildDir, 'libsodium-%s' % Version)
+    dir = os.path.join(buildDir, 'libxml2-%s' % Version)
     os.chdir(dir)
 
     configure = ['./configure']

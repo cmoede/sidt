@@ -2,7 +2,7 @@ import sidt
 import os
 import shutil
 
-Version = '1.0.2h'
+Version = '1.1.0b'
 
 def start(builder):
 
@@ -20,11 +20,18 @@ def buildDroid(builder):
     os.chdir(dir)
 
     configure = ['./Configure']
-    configure.append('android-' + arch)   
-    configure.append('--openssldir=' + installDir)
-    
+    if arch == 'x86':
+        configure.append('android-' + arch)   
+    else:
+        configure.append('android-armeabi')
+    configure.append('--prefix=' + installDir)
+    configure.append('no-shared') 
     toolchainDir = builder.getDroidToolchainDir()
-    env = { 'CC': builder.getDroidToolchainTool('gcc'),  
+    cc = builder.getDroidToolchainTool('gcc')
+    sysroot= builder.getDroidSysRoot()
+    env = { 'CC': cc,
+            'CROSS_SYSROOT':sysroot,
+            #'LDFLAGS': sysroot,
             'AR': builder.getDroidToolchainTool('ar'), 
             'RANLIB': builder.getDroidToolchainTool('ranlib'), 
             'PATH':os.path.join(toolchainDir, 'bin') + ':' + os.environ['PATH']
@@ -47,7 +54,7 @@ def buildDroid(builder):
     return [libcrypto, libopenssl]
 
 
-def buildIos(builder):
+def buildDarwin(builder):
 
     buildDir = builder.getBuildDir() 
     tmpDir = builder.getTmpDir()
@@ -58,26 +65,33 @@ def buildIos(builder):
     os.chdir(dir)
 
     configure = ['./Configure']
-
+    configure.append('no-asm')
+    configure.append('no-weak-ssl-ciphers')
+    configure.append('no-ssl2')
+    configure.append('no-ssl3')
     if platform == 'iPhoneOS':
         configure.append('iphoneos-cross')
     elif platform == 'iPhoneSimulator':
-        configure.append('darwin64-x86_64-cc')
+        if arch == 'i386':
+            configure.append('darwin-i386-cc')
+        else:
+            configure.append('darwin64-x86_64-cc')
     installDir = '%s/%s_%s' % (tmpDir, platform, arch)
-    configure.append('--openssldir=' + installDir)
- 
+    configure.append('--prefix=' + installDir)
     cc = builder.getCompiler()
     cc += ' -arch %s ' % arch
     cc += ' -isysroot %s' % builder.getIosSysRoot()
     cc += ' -mios-simulator-version-min=8.0'
-   
+    if builder.Settings['ios']['bitcode']:
+        cc += ' -fembed-bitcode' 
 
     env = { 'PLATFORM':platform,
             'CROSS_TOP':builder.getIosCrossTop(),
             'CROSS_SDK':builder.getIosCrossSDK(),
             'BUILD_TOOLS':builder.getXcodeDeveloperPath(),
             'CC':cc }
-   
+ 
+
     # configure
     print('configure...') 
     builder.execCmd(configure, shell=True, env=env)

@@ -1,7 +1,7 @@
 import sidt
 import os
 
-Version = '7.45.0'
+Version = '7.50.3'
 WithSSL = True 
 
 def start(builder):
@@ -64,7 +64,7 @@ def buildDroid(builder):
     libcurl = os.path.join(installDir, 'lib/libcurl.a')  
     return [libcurl]
 
-def buildIos(builder):
+def buildDarwin(builder):
   
     buildDir = builder.getBuildDir() 
     tmpDir = builder.getTmpDir()
@@ -82,15 +82,25 @@ def buildIos(builder):
     configure.append('--disable-manual')
     configure.append('--disable-shared')
     configure.append('--enable-static')
-    if WithSSL:
-        configure.append('--with-ssl')
+    configure.append('--with-ssl')
     configure.append('--prefix')
     configure.append(installDir) 
-    if platform == 'iPhoneOS':
-        configure.append('-host=armv7')
-
+    if arch == 'i386':
+        configure.append('--host=i386-apple-darwin')
+    elif arch == 'x86_64':
+        configure.append('--host=x86_64-apple-darwin')
+    elif arch == 'arm64':
+        configure.append('--host=arm-apple-darwin')
+    elif arch == 'armv7':
+        configure.append('--host=armv7-apple-darwin')
+    elif arch == 'armv7s':
+        configure.append('--host=armv7s-apple-darwin')
+    print(configure)
     cc = builder.getCompiler()
     cc += ' -framework Security'
+    if builder.Settings['ios']['bitcode']:
+        cc += ' -fembed-bitcode' 
+
     cflags = ' -arch %s ' % arch
     cflags += ' -isysroot %s' % builder.getIosSysRoot()
     cflags += ' -mios-simulator-version-min=8.0'

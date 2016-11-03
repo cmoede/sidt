@@ -55,7 +55,7 @@ def buildDroid(builder):
     return [libsodium]
     
 
-def buildIos(builder):
+def buildDarwin(builder):
     buildDir = builder.getBuildDir() 
     tmpDir = builder.getTmpDir()
     platform = builder.getCurPlatform()
@@ -72,12 +72,19 @@ def buildIos(builder):
     configure.append(installDir) 
     if platform == 'iPhoneOS':
         configure.append('--host=arm-apple-darwin10')
+    elif platform == 'iPhoneSimulator':
+        if arch == 'i386':
+            configure.append('--host=i686-apple-darwin10')
+        else:
+            configure.append('--host=x86_64-apple-darwin10')
 
     cc = builder.getCompiler()
     cflags = ' -arch %s ' % arch
     cflags += ' -isysroot %s' % builder.getIosSysRoot()
     cflags += ' -mios-simulator-version-min=8.0'
-    
+    if builder.Settings['ios']['bitcode']:
+        cflags += ' -fembed-bitcode' 
+   
     configure.append('CC=%s' % cc)
     configure.append('CFLAGS=%s' % cflags)
 
