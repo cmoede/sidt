@@ -47,7 +47,7 @@ def buildDroid(builder):
 
     # make install
     print('make install...')
-    builder.execCmd(['make', 'install'], env=env)
+    builder.execCmd(['make', 'install_sw'], env=env)
 
     libcrypto = os.path.join(installDir, 'lib/libcrypto.a') 
     libopenssl = os.path.join(installDir, 'lib/libssl.a') 
@@ -66,6 +66,7 @@ def buildDarwin(builder):
 
     configure = ['./Configure']
     configure.append('no-asm')
+    configure.append('no-async')
     configure.append('no-weak-ssl-ciphers')
     configure.append('no-ssl2')
     configure.append('no-ssl3')
@@ -102,7 +103,7 @@ def buildDarwin(builder):
 
     # make install
     print('make install...')
-    builder.execCmd(['make', 'install'], env=env)
+    builder.execCmd(['make', 'install_sw'], env=env)
 
     libcrypto = os.path.join(installDir, 'lib/libcrypto.a') 
     libopenssl = os.path.join(installDir, 'lib/libssl.a') 

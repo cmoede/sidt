@@ -1,30 +1,30 @@
 import sidt
 import os
 
-Version = '2.7.1'
+Version = '1.3.5'
 
 def start(builder):
-    url = 'http://download.savannah.gnu.org/releases/freetype/freetype-%s.tar.gz' % Version
+    url = 'http://downloads.xiph.org/releases/vorbis/libvorbis-%s.tar.gz' % (Version,)
     builder.setPackage(url)
 
 def buildDarwin(builder):
-    buildDir = builder.getBuildDir() 
+    buildDir = builder.getBuildDir()
     tmpDir = builder.getTmpDir()
     platform = builder.getCurPlatform()
     arch = builder.getCurArchitecture()
     installDir = os.path.join(tmpDir, '%s_%s' % (platform, arch))
-    
-    dir = os.path.join(buildDir, 'freetype-%s' % Version)
+
+    dir = os.path.join(buildDir, 'libvorbis-%s' % Version)
     os.chdir(dir)
 
     configure = ['./configure']
-    
+
     configure.append('--enable-static=yes')
     configure.append('--enable-shared=no')
-    configure.append('--disable-dependency-trackin')
-    configure.append('--without-harfbuzz')
+    configure.append('--disable-dependency-tracking')
     configure.append('--prefix')
-    configure.append(installDir) 
+    configure.append(installDir)
+    configure.append('--with-ogg=%s' % (os.path.join(builder.getInstallDir(), 'osx')))
     if platform == 'iPhoneOS':
         configure.append('-host=arm-apple-darwin')
     cc = builder.getCompiler()
@@ -32,8 +32,9 @@ def buildDarwin(builder):
     if platform == 'iPhoneOS' or platform == 'iPhoneSimulator':
         cflags += ' -isysroot %s' % builder.getIosSysRoot()
         cflags += ' -mios-simulator-version-min=8.0'
-    ldflags = '' 
+    ldflags = ''
     cppflags = ''
+
     configure.append('CC=%s' % cc)
     configure.append('CFLAGS=%s' % cflags)
     configure.append('CPPFLAGS=%s' % cppflags)
@@ -41,7 +42,7 @@ def buildDarwin(builder):
     env = {}
 
     # configure
-    print('configure...') 
+    print('configure...')
     builder.execCmd(configure, env=env)
 
     # make
@@ -52,8 +53,7 @@ def buildDarwin(builder):
     print('make install...')
     builder.execCmd(['make', 'install'], env=env)
 
-    libft2 = os.path.join(installDir, 'lib/libfreetype.a')  
-    return [libft2]
+    return [os.path.join(installDir, 'lib/libvorbis.a'), os.path.join(installDir, 'lib/libvorbisfile.a')]
 
 def buildDroid(builder):
     buildDir = builder.getBuildDir()
@@ -62,16 +62,18 @@ def buildDroid(builder):
     arch = builder.getCurArchitecture()
     installDir = os.path.join(tmpDir, '%s_%s' % (platform, arch))
 
-    dir = os.path.join(buildDir, 'freetype-%s' % Version)
+    dir = os.path.join(buildDir, 'libvorbis-%s' % Version)
     os.chdir(dir)
 
-    configure = ['./Configure']
+
+    configure = ['./configure']
+    configure.append('--enable-static=yes')
+    configure.append('--enable-shared=no')
+    configure.append('--disable-dependency-tracking')
     configure.append('--host=arm-linux-androideabi')
-    configure.append('--disable-shared')
-    configure.append('--enable-static')
-    configure.append('--without-harfbuzz')
     configure.append('--prefix')
     configure.append(installDir)
+    configure.append('--with-ogg=%s' % (os.path.join(builder.getInstallDir(), 'droid', builder.getDroidABI())))
 
     env = { 'PATH':os.path.join(builder.getDroidToolchainDir(), 'bin') + ':' + os.environ['PATH'] }
 
@@ -88,8 +90,8 @@ def buildDroid(builder):
     print('make install...')
     builder.execCmd(['make', 'install'], env=env)
 
-    libft2 = os.path.join(installDir, 'lib/libfreetype.a')
-    return [libft2]
+    return [os.path.join(installDir, 'lib/libvorbis.a'), os.path.join(installDir, 'lib/libvorbisfile.a')]
+
 
 def copyIncludeFiles(builder, dest):
     tmpDir = builder.getTmpDir()

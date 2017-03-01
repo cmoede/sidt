@@ -1,7 +1,7 @@
 import sidt
 import os
 
-Version = '1.6.19'
+Version = '1.6.28'
 
 def start(builder):
     url = 'http://netix.dl.sourceforge.net/project/libpng/libpng16/%s/libpng-%s.tar.gz' % (Version, Version)
@@ -21,7 +21,7 @@ def buildDarwin(builder):
     
     configure.append('--enable-static=yes')
     configure.append('--enable-shared=no')
-    configure.append('--disable-dependency-trackin')
+    configure.append('--disable-dependency-tracking')
     configure.append('--prefix')
     configure.append(installDir) 
     if platform == 'iPhoneOS':

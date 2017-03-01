@@ -20,7 +20,9 @@ def buildDroid(builder):
     configure = ['./configure']
     configure.append('--disable-shared')
     configure.append('--disable-soname-versions')
-    configure.append('--enable-minimal')    
+    configure.append('--enable-minimal')
+    configure.append('--disable-asm')
+    configure.append('--disable-pie')
     configure.append('--prefix=%s' % installDir)
     configure.append('--with-sysroot=%s' % builder.getDroidSysRoot())
     if arch == 'x86':
