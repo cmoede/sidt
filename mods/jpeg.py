@@ -9,6 +9,7 @@ def makeCommonConfigureArgs(installDir):
     configure.append('--enable-static=yes')
     configure.append('--enable-shared=no')
     configure.append('--disable-dependency-trackin')
+    configure.append('--with-pic=yes')
     configure.append('--prefix')
     configure.append(installDir)
     return configure
