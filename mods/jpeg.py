@@ -2,7 +2,16 @@ import sidt
 import os
 
 Version = '8d'
-WithSSL = True 
+WithSSL = True
+
+def makeCommonConfigureArgs(installDir):
+    configure = []
+    configure.append('--enable-static=yes')
+    configure.append('--enable-shared=no')
+    configure.append('--disable-dependency-trackin')
+    configure.append('--prefix')
+    configure.append(installDir)
+    return configure
 
 def start(builder):
     url = 'http://www.ijg.org/files/jpegsrc.v%s.tar.gz' % Version
@@ -20,12 +29,8 @@ def buildDarwin(builder):
     os.chdir(dir)
 
     configure = ['./configure']
-    
-    configure.append('--enable-static=yes')
-    configure.append('--enable-shared=no')
-    configure.append('--disable-dependency-trackin')
-    configure.append('--prefix')
-    configure.append(installDir) 
+
+    configure += makeCommonConfigureArgs(installDir)
     if platform == 'iPhoneOS':
         configure.append('-host=arm-apple-darwin')
     cc = builder.getCompiler()
@@ -43,18 +48,18 @@ def buildDarwin(builder):
     env = {}
 
     # configure
-    print('configure...') 
+    print('libjpeg: configure...')
     builder.execCmd(configure, env=env)
 
     # make
-    print('make...')
+    print('libjpeg: make...')
     builder.execCmd(['make'], env=env)
 
     # make install
-    print('make install...')
+    print('libjpeg: make install...')
     builder.execCmd(['make', 'install'], env=env)
 
-    libjpeg = os.path.join(installDir, 'lib/libjpeg.a')  
+    libjpeg = os.path.join(installDir, 'lib/libjpeg.a')
     return [libjpeg]
 
 def buildDroid(builder):
@@ -68,32 +73,51 @@ def buildDroid(builder):
     dir = os.path.join(buildDir, 'jpeg-%s' % Version)
     os.chdir(dir)
 
-    configure = ['./Configure']
+    configure = ['./configure']
     configure.append('--host=arm-linux-androideabi')
-    configure.append('--disable-ldap')
-    configure.append('--disable-ftp')
-    configure.append('--disable-manual')
-    configure.append('--disable-shared')
-    configure.append('--enable-static')
-    if WithSSL:
-        configure.append('--with-ssl')
-    configure.append('--prefix')
-    configure.append(installDir)
+    configure += makeCommonConfigureArgs(installDir)
 
     env = { 'PATH':os.path.join(builder.getDroidToolchainDir(), 'bin') + ':' + os.environ['PATH'] }
 
-
     # configure
-    print('configure...')
+    print('libjpeg: configure...')
     builder.execCmd(configure, env=env)
 
     # make
-    print('make...')
+    print('libjpeg: make...')
     builder.execCmd(['make'], env=env)
 
     # make install
-    print('make install...')
+    print('libjpeg: make install...')
     builder.execCmd(['make', 'install'], env=env)
+
+    libjpeg = os.path.join(installDir, 'lib/libjpeg.a')
+    return [libjpeg]
+
+def buildLinux(builder):
+    buildDir = builder.getBuildDir()
+    tmpDir = builder.getTmpDir()
+    platform = builder.getCurPlatform()
+    arch = builder.getCurArchitecture()
+    installDir = os.path.join(tmpDir, '%s_%s' % (platform, arch))
+
+    dir = os.path.join(buildDir, 'jpeg-%s' % Version)
+    os.chdir(dir)
+
+    configure = ['./configure']
+    configure += makeCommonConfigureArgs(installDir)
+
+    # configure
+    print('libjpeg: configure...')
+    builder.execCmd(configure)
+
+    # make
+    print('libjpeg: make...')
+    builder.execCmd(['make'])
+
+    # make install
+    print('libjpeg: make install...')
+    builder.execCmd(['make', 'install'])
 
     libjpeg = os.path.join(installDir, 'lib/libjpeg.a')
     return [libjpeg]
