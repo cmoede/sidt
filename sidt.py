@@ -23,7 +23,7 @@ class builder:
 
     LibsToBuild = []
 
-    KnownTargets = ['ios', 'droid', 'linux']
+    KnownTargets = ['ios', 'droid', 'linux', 'osx']
     Targets = []
 
     # current build state
@@ -191,7 +191,7 @@ class builder:
 
     def getCurArchitecture(self):
         return self.CurArchitecture
-    
+
     def getCompiler(self):
         return os.path.join(self.getXcodeDeveloperPath(), 'usr/bin/gcc')
 

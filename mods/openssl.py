@@ -81,20 +81,25 @@ def buildDarwin(builder):
             configure.append('darwin-i386-cc')
         else:
             configure.append('darwin64-x86_64-cc')
+    elif platform == 'osx':
+        configure.append('darwin64-x86_64-cc')
     installDir = '%s/%s_%s' % (tmpDir, platform, arch)
-    configure.append('--prefix=' + installDir)
-    cc = builder.getCompiler()
-    cc += ' -arch %s ' % arch
-    cc += ' -isysroot %s' % builder.getIosSysRoot()
-    cc += ' -mios-simulator-version-min=8.0'
-    if builder.Settings['ios']['bitcode']:
-        cc += ' -fembed-bitcode'
+    configure += makeCommonConfigureArgs(installDir)
+    if platform != 'osx':
+        cc = builder.getCompiler()
+        cc += ' -arch %s ' % arch
+        cc += ' -isysroot %s' % builder.getIosSysRoot()
+        cc += ' -mios-simulator-version-min=8.0'
+        if builder.Settings['ios']['bitcode']:
+            cc += ' -fembed-bitcode'
 
-    env = { 'PLATFORM':platform,
-            'CROSS_TOP':builder.getIosCrossTop(),
-            'CROSS_SDK':builder.getIosCrossSDK(),
-            'BUILD_TOOLS':builder.getXcodeDeveloperPath(),
-            'CC':cc }
+        env = { 'PLATFORM':platform,
+                'CROSS_TOP':builder.getIosCrossTop(),
+                'CROSS_SDK':builder.getIosCrossSDK(),
+                'BUILD_TOOLS':builder.getXcodeDeveloperPath(),
+                'CC':cc }
+    else:
+        env = None
 
 
     # configure
