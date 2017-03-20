@@ -41,6 +41,16 @@ def buildDarwin(builder):
         cflags += ' -mios-simulator-version-min=8.0'
     ldflags = '' 
     cppflags = ''
+    if arch == 'i386':
+        configure.append('--host=i386-apple-darwin')
+    elif arch == 'x86_64':
+        configure.append('--host=x86_64-apple-darwin')
+    elif arch == 'arm64':
+        configure.append('--host=arm-apple-darwin')
+    elif arch == 'armv7':
+        configure.append('--host=armv7-apple-darwin')
+    elif arch == 'armv7s':
+        configure.append('--host=armv7s-apple-darwin')
 
     configure.append('CC=%s' % cc)
     configure.append('CFLAGS=%s' % cflags)
