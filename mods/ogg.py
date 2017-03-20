@@ -29,8 +29,6 @@ def buildDarwin(builder):
 
     configure = ['./configure']
     configure += makeCommonConfigureArgs(installDir)
-    if platform == 'iPhoneOS':
-        configure.append('-host=arm-apple-darwin')
     cc = builder.getCompiler()
     cflags = ' -arch %s ' % arch
     if platform == 'iPhoneOS' or platform == 'iPhoneSimulator':
@@ -39,6 +37,16 @@ def buildDarwin(builder):
     ldflags = ''
     cppflags = ''
 
+    if arch == 'i386':
+        configure.append('--host=i386-apple-darwin')
+    elif arch == 'x86_64':
+        configure.append('--host=x86_64-apple-darwin')
+    elif arch == 'arm64':
+        configure.append('--host=arm-apple-darwin')
+    elif arch == 'armv7':
+        configure.append('--host=armv7-apple-darwin')
+    elif arch == 'armv7s':
+        configure.append('--host=armv7s-apple-darwin')
     configure.append('CC=%s' % cc)
     configure.append('CFLAGS=%s' % cflags)
     configure.append('CPPFLAGS=%s' % cppflags)
