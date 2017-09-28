@@ -1,7 +1,7 @@
 import sidt
 import os
 
-Version = '7.51.0'
+Version = '7.55.1'
 WithSSL = True
 
 def start(builder):
@@ -120,7 +120,7 @@ def buildDarwin(builder):
 
         cflags = ' -arch %s ' % arch
         cflags += ' -isysroot %s' % builder.getIosSysRoot()
-        cflags += ' -mios-simulator-version-min=8.0'
+        cflags += ' -mios-simulator-version-min=9.0'
         ldflags = ''
         cppflags = ''
     else:
@@ -225,7 +225,7 @@ def copyIncludeFiles(builder, dest):
     src = os.path.join(builder.getBuildDir(), 'curl-%s' % Version, 'include')
 
     # fix include files to work for 32 and 64 bit architectures
-    path = os.path.join(src, 'curl', 'curlbuild.h')
+    path = os.path.join(src, 'curl', 'system.h')
     with open(path, 'r') as forg:
         with open(path + '.new', 'w') as fout:
             for line in forg:
