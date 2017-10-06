@@ -76,8 +76,8 @@ class builder:
         self.writeLog("Setup: DroidToolchainDir=%s" % self.DroidToolchainDir)
 
         self.InstallDir = os.path.join(self.SavedCWD, 'sidt_install')
-        if not os.path.exists(self.InstallDir):
-            os.mkdir(self.InstallDir)
+        self.rmDir(self.InstallDir)
+        os.mkdir(self.InstallDir)
         self.writeLog("Setup: InstallDir=%s" % self.InstallDir)
 
 
